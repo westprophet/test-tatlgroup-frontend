@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
@@ -88,7 +88,7 @@ const staticColumns: TableColumn[] = [
 export default function SchoolTableContainer() {
     const [load, setLoad] = React.useState<boolean>(true);
     const [tableData, setTableData] = React.useState<{ columns: TableColumn[], rows: TableData[] } | undefined>();
-
+    const timer = useRef();
     const reload = async () => {
         //Получаем данные
         const columnsData = await getColumns();
@@ -118,15 +118,27 @@ export default function SchoolTableContainer() {
             //выключаем прелоудер если все загрузилось и создалось корректно
             setLoad(false);
         });
+        
+        //Запускаем регулярное обновление приложения
+        // @ts-ignore
+        timer.current = setInterval(()=>{
+            reload().then(r => {
+                //выключаем прелоудер если все загрузилось и создалось корректно
+                console.log('Обновлено')
+            });
+        },3000)
+        return()=>{
+            clearInterval(timer.current);
+        }
     }, []);
 
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
 
-    if (!tableData)
-        return <h1 style={{lineHeight: '100vh'}}>Данных нет но вы держитесь! Ну или проверьте сервер</h1>
-    else if (load)
+    if (load)
         return <h1 style={{lineHeight: '100vh'}}> Загрузка... </h1>
+    else if (!tableData )
+        return <h1 style={{lineHeight: '100vh'}}>Данных нет но вы держитесь! Ну или проверьте сервер</h1>
 
 
     const handleChangePage = (event: unknown, newPage: number) => {

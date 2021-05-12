@@ -1,3 +1,10 @@
+#TATL Group test 
+
+
+Сменить конфиг API можно в файле /src/config/api.config.js/
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
