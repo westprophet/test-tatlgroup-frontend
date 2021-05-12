@@ -17,7 +17,7 @@ import {getColumns} from "../../api/columnsAPI";
 import {addRate, getRate, unRate} from "../../api/rateAPI";
 
 
-export interface TableColumn {
+interface TableColumn {
     column_id: string;
     name: string;
     label: string;
@@ -26,12 +26,12 @@ export interface TableColumn {
     format?: (value: number) => string;
 }
 
-interface TableRow {
+interface TableData {
     [c: string]: string;
 }
 
 //Преобразовываем строки в нужный для таблицы вид
-function createRow(number: number, schoolboy: ISchoolboy, rate: Array<IRate>, columns: IColumn[]): TableRow {
+function createRow(number: number, schoolboy: ISchoolboy, rate: Array<IRate>, columns: IColumn[]): TableData {
     const name = `${schoolboy.FirstName ?? ''} ${schoolboy.SecondName ?? ''}  ${schoolboy.LastName}`;
     const res = {id: schoolboy.Id, number: String(number), name: name};
     columns.forEach((column) => {
@@ -52,7 +52,7 @@ const createStyles = makeStyles({
         width: '100%',
     },
     container: {
-        maxHeight: 440,
+        maxHeight: 'calc(100vh - 60px)',
     },
     cell: {
         transition: '.3s',
@@ -63,7 +63,7 @@ const createStyles = makeStyles({
             color: 'white'
         },
     },
-    rightLine:{
+    rightLine: {
         borderRight: '1px solid rgba(224, 224, 224, 1)',
     }
 });
@@ -87,8 +87,7 @@ const staticColumns: TableColumn[] = [
 
 export default function SchoolTableContainer() {
     const [load, setLoad] = React.useState<boolean>(true);
-    const [tableData, setTableData] = React.useState<{ columns: TableColumn[], rows: TableRow[] } | undefined>();
-
+    const [tableData, setTableData] = React.useState<{ columns: TableColumn[], rows: TableData[] } | undefined>();
 
     const reload = async () => {
         //Получаем данные
@@ -103,12 +102,19 @@ export default function SchoolTableContainer() {
         const columns = [...staticColumns, ...columnsData.Items.map((i) => createRateColumn(i))];
 
         //Обновляем состояние таблицы
-        setTableData({
-            columns: columns,
-            rows: rows,
-        });
+        console.log(columns);
+        console.log(rows);
+        if (columns && rows)
+            setTableData({
+                columns: columns,
+                rows: rows,
+            });
+        else
+            setTableData(undefined);
     }
+
     const classes = createStyles();
+
     useEffect(() => {
         reload().then(r => {
             //выключаем прелоудер если все загрузилось и создалось корректно
@@ -117,9 +123,12 @@ export default function SchoolTableContainer() {
     }, []);
 
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [rowsPerPage, setRowsPerPage] = React.useState(25);
 
-    if (!tableData || load) return null;//Не даем рендерить если недостаточно данных для отображаения
+    if (!tableData)
+        return <h1 style={{lineHeight: '100vh'}}>Данных нет но вы держитесь! Ну или проверьте сервер</h1>
+    else if (load)
+        return <h1 style={{lineHeight: '100vh'}}> Загрузка... </h1>
 
 
     const handleChangePage = (event: unknown, newPage: number) => {
@@ -137,7 +146,7 @@ export default function SchoolTableContainer() {
 
 
     //При нажатии на ячейку
-    const onClickCell = (column: TableColumn, row: TableRow) => {
+    const onClickCell = (column: TableColumn, row: TableData) => {
         const value: string = row[column.name];
         if (!value) {
             addRate(row.id, column.column_id).then((r) => {
@@ -180,8 +189,12 @@ export default function SchoolTableContainer() {
                                             const staticColumn = (column.name !== 'name' && column.name !== 'number');
                                             return (
                                                 <TableCell
-                                                    className={cn({[classes.cell]: staticColumn ,[classes.rightLine]: column.name === 'name'})}
-                                                    onClick={staticColumn ? () => onClickCell(column, row) : ()=>{}}
+                                                    className={cn({
+                                                        [classes.cell]: staticColumn,
+                                                        [classes.rightLine]: column.name === 'name'
+                                                    })}
+                                                    onClick={staticColumn ? () => onClickCell(column, row) : () => {
+                                                    }}
                                                     key={column.name}
                                                     align={column.align}
                                                 >
@@ -197,7 +210,7 @@ export default function SchoolTableContainer() {
                 </Table>
             </TableContainer>
             <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
+                rowsPerPageOptions={[25, 100]}
                 component="div"
                 count={_rows.length}
                 rowsPerPage={rowsPerPage}
