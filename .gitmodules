@@ -1,0 +1,6 @@
+[submodule "src/main"]
+	path = src/main
+	url = https://github.com/westprophet/test-tatlgroup-frontend.git
+[submodule "src/test-tatlgroup-frontend"]
+	path = src/test-tatlgroup-frontend
+	url = https://github.com/westprophet/test-tatlgroup-frontend.git

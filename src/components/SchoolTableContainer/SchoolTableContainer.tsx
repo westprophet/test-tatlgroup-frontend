@@ -102,8 +102,6 @@ export default function SchoolTableContainer() {
         const columns = [...staticColumns, ...columnsData.Items.map((i) => createRateColumn(i))];
 
         //Обновляем состояние таблицы
-        console.log(columns);
-        console.log(rows);
         if (columns && rows)
             setTableData({
                 columns: columns,
@@ -150,7 +148,6 @@ export default function SchoolTableContainer() {
         const value: string = row[column.name];
         if (!value) {
             addRate(row.id, column.column_id).then((r) => {
-                console.log(r)
                 if (r === 200) reload().then(() => setLoad(false));
             });
         } else {
